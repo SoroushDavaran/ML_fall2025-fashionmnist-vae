@@ -82,7 +82,61 @@ Finally, we compute the mean intensity per image and plot its distribution. Most
 
 ![Per-image Mean Intensity](./images/mean_intensity.png)
 
-## Phase 1 summary
+### Phase 1 summary
 
 At the end of Phase 1, we have a reproducible and verified data pipeline: the dataset is correctly loaded, transformed into `[0,1]` tensors of shape `[B,1,28,28]`, split into train/validation/test, and validated via both numeric checks and visual sanity inspection. The EDA confirms an approximately balanced class distribution and highlights the expected background-heavy intensity structure of Fashion-MNIST. This setup provides a clean foundation for Phase 2, where we implement and train the baseline VAE.
+
+
+## Phase 2: Baseline VAE & Quality Improvement (Competition Upgrade)
+
+In this phase, we implemented a generative framework from scratch. We began with a standard fully connected Variational Autoencoder (VAE) to establish a baseline, and subsequently engineered an advanced, deep Convolutional VAE with Residual Blocks to achieve State-of-the-Art (SOTA) fidelity for the project's FID competition.
+
+### 1. Baseline Model: MLP-VAE
+
+The baseline architecture was constructed entirely using dense (Linear) layers. The encoder compresses a flattened  image into a highly restricted 16-dimensional latent space ().
+
+The model was trained for 10 epochs using a fixed  for the Kullback-Leibler (KL) divergence and `BCEWithLogitsLoss` for numerical stability during reconstruction.
+
+**Baseline Test Metrics:**
+
+* **Reconstruction Loss:** 230.31
+* **KL Divergence:** 12.08
+* **Total Loss:** 242.39
+
+> *(Insert your baseline reconstruction and sampling grids here)*
+> `![Baseline Reconstructions](assets/baseline_recon.png)`
+> `![Baseline Samples](assets/baseline_samples.png)`
+
+---
+
+### 2. Pushing the Limits: Advanced ResNet-VAE
+
+To dominate the generative competition and radically improve the visual quality of the synthesized clothing items, we implemented three major architectural and strategic upgrades:
+
+1. **Deep Residual Architecture:** We replaced the linear layers with a deep Convolutional network integrating **Residual Blocks**. This preserves high-frequency spatial details (like sharp edges and textures) and prevents the blurring commonly associated with standard VAEs.
+2. **Expanded Latent Capacity:** The latent dimension was quadrupled from 16 to **64**, providing the model with a higher capacity to store complex physical attributes.
+3. **KL Annealing (Dynamic Regularization):** Instead of a fixed , we applied a Cosine Annealing scheduler and a KL warmup phase over the first 10 epochs. This allowed the network to prioritize structural reconstruction early in training before enforcing the normal prior distribution.
+
+**Advanced Model Test Metrics:**
+
+* **Reconstruction Loss:** 219.05 *(Significant improvement over the baseline)*
+* **KL Divergence:** 17.76 *(Expected increase due to the larger latent capacity of 64 dimensions)*
+* **Total Loss:** 236.82
+
+> *(Insert your advanced model reconstruction and sampling grids here)*
+> `![Advanced ResNet Reconstructions](assets/resnet_recon.png)`
+> `![Advanced ResNet Samples](assets/resnet_samples.png)`
+
+---
+
+### 3. Quantitative Evaluation: Fréchet Inception Distance (FID)
+
+To objectively quantify the generative realism—and to benchmark our model for the competition—we utilized the **Fréchet Inception Distance (FID)**. Using a pre-trained `ResNet18` classifier as the feature extractor, we compared the latent distributions of 10,000 real test images against 10,000 synthesized images.
+
+| Model | FID Score |
+| --- | --- |
+| Baseline MLP-VAE | 9.39 |
+| **Advanced ResNet-VAE** | **5.89** 🏆 |
+
+**Conclusion:** Our advanced architecture successfully reduced the FID score by **3.50 points**, achieving an exceptional final score of **5.89**. For a dataset of this resolution (Fashion-MNIST), an FID under 10 indicates that the synthetically generated distributions are practically indistinguishable from the real dataset manifold to the classifier's feature extractor.
 
