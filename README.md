@@ -192,9 +192,4 @@ FID Improvement: 3.50 points 🔥
 | Baseline MLP-VAE (latent=16)              |     9.39 |
 | **Advanced Residual ConvVAE (latent=64)** | **5.89**🏆 |
 
----
-
-```
-
-If you want, I can also (1) add a short “Implementation Notes” paragraph (why logits, why BCEWithLogits, why KL warm-up), and (2) suggest a clean naming convention for the saved figures under `assets/` so your README stays consistent across phases 1–4.
 ```
