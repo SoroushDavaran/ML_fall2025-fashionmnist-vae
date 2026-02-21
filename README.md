@@ -192,4 +192,43 @@ FID Improvement: 3.50 points 🔥
 | Baseline MLP-VAE (latent=16)              |     9.39 |
 | **Advanced Residual ConvVAE (latent=64)** | **5.89**🏆 |
 
-```
+
+
+
+## Phase 3: VAE & Latent Space Interpretability
+
+In this phase, we implemented a -VAE framework to systematically investigate the **Information Bottleneck** trade-off between reconstruction fidelity and latent space disentanglement. By scaling the Kullback-Leibler (KL) divergence term with a hyperparameter , we control the exact capacity of the latent space.
+
+### 1. Quantitative Analysis: The  Trade-off
+
+We trained three separate Advanced ResNet-VAE models with . The evaluation on the test set explicitly demonstrates the theoretical trade-off:
+
+| Model () | Reconstruction Loss ↓ | KL Divergence ↓ | Total Loss |
+| --- | --- | --- | --- |
+| **** | **218.07** | 23.50 | 232.17 |
+| **** | 223.62 | 17.35 | 239.24 |
+| **** | 249.58 | **5.49** | 277.07 |
+
+* **Low  (0.6):** The model prioritizes minimizing the reconstruction loss, resulting in sharper images. However, it applies less penalty to the latent distribution (KL: 23.50), leading to an entangled space.
+* **High  (5.0):** The network heavily penalizes deviations from the prior  (KL drops to 5.49). The trade-off is restricted information flow, causing blurrier reconstructions (Recon rises to 249.58).
+
+
+### 2. Qualitative Analysis: Latent Space Traversal
+
+To visually validate the interpretability of our learned representations, we performed **Latent Space Traversal**. We selected a fixed reference image, identified the top 5 most "active" latent dimensions, and swept each dimension across a range of  while freezing the others.
+
+**Traversal with  (Entangled Space):**
+With a lower , the features are highly entangled. For instance, traversing a single dimension (e.g., Dim 6) abruptly morphs a dress into an entirely different class (a shoe). This indicates that a single latent variable encodes multiple, unrelated physical concepts simultaneously.
+
+> `![Latent Traversal Beta 0.6](assets/traversal_0.6.png)`
+
+**Traversal with  (Balanced Space):**
+This setting provides a middle ground, showing slightly smoother transitions between structural forms while maintaining decent visual sharpness.
+
+> `![Latent Traversal Beta 0.9](assets/traversal_0.9.png)`
+
+**Traversal with  (Posterior Collapse & Disentanglement):**
+With a strong regularization penalty (), we observe a famous theoretical phenomenon known as **Posterior Collapse (Latent Pruning)**. The model is so heavily penalized for storing information that it completely "turns off" certain latent variables to save KL cost.
+Notice how traversing **Dim 14** and **Dim 18** results in absolutely zero change to the output image; the decoder has learned to completely ignore these "dead" dimensions as they contain no mutual information. However, the dimensions that *do* survive the bottleneck (like **Dim 17**, which smoothly transitions a sleeveless dress into a long-sleeved top) represent highly isolated, disentangled, and meaningful semantic features.
+
+> `![Latent Traversal Beta 5.0](assets/traversal_5.0.png)`
