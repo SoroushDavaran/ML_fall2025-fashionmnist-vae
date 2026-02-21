@@ -232,3 +232,37 @@ With a strong regularization penalty (), we observe a famous theoretical phenome
 Notice how traversing **Dim 14** and **Dim 18** results in absolutely zero change to the output image; the decoder has learned to completely ignore these "dead" dimensions as they contain no mutual information. However, the dimensions that *do* survive the bottleneck (like **Dim 17**, which smoothly transitions a sleeveless dress into a long-sleeved top) represent highly isolated, disentangled, and meaningful semantic features.
 
 > `![Latent Traversal Beta 5.0](assets/traversal_5.0.png)`
+
+
+## Phase 4: Conditional VAE (CVAE) & Directed Generation
+
+In the final phase, we transformed our generative architecture into a **Conditional Variational Autoencoder (CVAE)**. By conditioning both the encoder and decoder on explicit class labels (), we gained the ability to dictate exactly *which* category of clothing the model should synthesize from random noise.
+
+### 1. Robust Multi-Scale Conditioning
+
+To ensure the model heavily relies on the conditioning label, we injected the one-hot encoded class vector  not just at the latent bottleneck, but across multiple spatial resolutions within the decoder (e.g., concatenated at the , , and  feature map stages). This robust multi-scale conditioning significantly reduces mode collapse and class confusion.
+
+### 2. Directed Generation Results
+
+We forced the model to generate 20 novel samples for each of the 10 specific categories using standard random noise  paired with a hard-coded label .
+
+As seen in the generation grid, the model accurately isolates the structural identity of each class:
+
+> `![CVAE Conditional Generation Grid](assets/conditional_grid.jpg)`
+
+### 3. Quantitative Evaluation (Classifier Accuracy)
+
+To rigorously evaluate the conditionality, we generated 500 synthetic images *per class* (5,000 total) and evaluated them using the pre-trained `FashionResNet18` classifier. The metric measures how often the synthesized image is confidently recognized as the requested target class.
+
+| Class Label | Generation Accuracy | Class Label | Generation Accuracy |
+| --- | --- | --- | --- |
+| Trouser | **100.00%** | Ankle boot | 99.80% |
+| Sneaker | 98.80% | Bag | 97.40% |
+| Dress | 96.80% | Pullover | 96.00% |
+| T-shirt/top | 91.40% | Sandal | 87.20% |
+| Shirt | 75.40% | Coat | 63.80% |
+
+**🏆 Overall Conditional Generation Accuracy: 90.66%**
+
+**Analysis:**
+The CVAE achieved an exceptional overall accuracy of **90.66%**. The model performs flawlessly on structurally distinct classes (e.g., Trousers at 100%, Ankle boots at 99.8%). Lower accuracies are exclusively observed in structurally highly-overlapping categories (e.g., Coats vs. Shirts) or classes with extreme intra-class variance and thin structures (e.g., Sandals), which is a well-documented theoretical limitation of VAE-based pixel-wise objective functions.
