@@ -294,7 +294,7 @@ This multi-scale injection helps preserve label control throughout the decoding 
 
 ---
 
-### 4.2 Training protocol and test metrics
+###  Training protocol and test metrics
 
 We train the CVAE with the same VAE objective as earlier phases, but now conditioned on \(y\):
 
@@ -358,7 +358,7 @@ Interpretation. The CVAE achieves strong control on structurally distinct classe
 
 ---
 
-### 4.5 Optional qualitative checks: style morphing and control comparison
+### Optional qualitative checks: style morphing and control comparison
 
 Beyond class control, we also visualize *intra-class style continuity* by interpolating between the encoder means of two real images from the same class and decoding the interpolated latent codes under the same label condition.
 
