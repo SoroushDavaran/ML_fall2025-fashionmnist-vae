@@ -195,43 +195,81 @@ FID Improvement: 3.50 points 🔥
 
 
 
-## Phase 3: VAE & Latent Space Interpretability
+## Phase 3 — β-VAE and Latent Space Interpretability
 
-In this phase, we implemented a -VAE framework to systematically investigate the **Information Bottleneck** trade-off between reconstruction fidelity and latent space disentanglement. By scaling the Kullback-Leibler (KL) divergence term with a hyperparameter , we control the exact capacity of the latent space.
+Phase 3 investigates how the VAE latent space changes when we explicitly scale the KL regularization term by a factor **β** (i.e., a β-VAE). Concretely, we optimize the same objective as Phase 2 but replace the regularization weight with β:
 
-### 1. Quantitative Analysis: The  Trade-off
+$`
+\mathcal{L} = \mathcal{L}_{recon} + \beta \cdot D_{KL}(q(z|x)\,\|\,\mathcal{N}(0,I))
+`$
 
-We trained three separate Advanced ResNet-VAE models with . The evaluation on the test set explicitly demonstrates the theoretical trade-off:
+Intuitively, smaller β allows the model to encode more information in \(z\) (often improving reconstructions), while larger β pushes the posterior toward the unit Gaussian prior (often improving structure/disentanglement, but at the cost of reconstruction fidelity).
 
-| Model () | Reconstruction Loss ↓ | KL Divergence ↓ | Total Loss |
-| --- | --- | --- | --- |
-| **** | **218.07** | 23.50 | 232.17 |
-| **** | 223.62 | 17.35 | 239.24 |
-| **** | 249.58 | **5.49** | 277.07 |
+---
 
-* **Low  (0.6):** The model prioritizes minimizing the reconstruction loss, resulting in sharper images. However, it applies less penalty to the latent distribution (KL: 23.50), leading to an entangled space.
-* **High  (5.0):** The network heavily penalizes deviations from the prior  (KL drops to 5.49). The trade-off is restricted information flow, causing blurrier reconstructions (Recon rises to 249.58).
+###  Experimental setup
 
+To isolate the effect of β, we trained **three separate instances** of our convolutional VAE (the same Advanced/Residual ConvVAE family used in Phase 2) with identical training settings, except for β:
 
-### 2. Qualitative Analysis: Latent Space Traversal
+- **Latent dimension:** 32  
+- **Epochs per run:** 10  
+- **Learning rate:** 1e-3  
+- **β values:** 0.6, 0.9, 5.0  
 
-To visually validate the interpretability of our learned representations, we performed **Latent Space Traversal**. We selected a fixed reference image, identified the top 5 most "active" latent dimensions, and swept each dimension across a range of  while freezing the others.
+We re-seed the run at the start of each β experiment to keep comparisons consistent.
 
-**Traversal with  (Entangled Space):**
-With a lower , the features are highly entangled. For instance, traversing a single dimension (e.g., Dim 6) abruptly morphs a dress into an entirely different class (a shoe). This indicates that a single latent variable encodes multiple, unrelated physical concepts simultaneously.
+---
 
-> `![Latent Traversal Beta 0.6](assets/traversal_0.6.png)`
+###  Quantitative results: reconstruction vs. regularization
 
-**Traversal with  (Balanced Space):**
-This setting provides a middle ground, showing slightly smoother transitions between structural forms while maintaining decent visual sharpness.
+The table below reports the **test-set** decomposition of the VAE objective into reconstruction loss, KL divergence, and total loss. It directly shows the trade-off induced by β:
 
-> `![Latent Traversal Beta 0.9](assets/traversal_0.9.png)`
+```text
+beta   recon      kl         total
+0.6    218.08     23.50      232.18
+0.9    223.62     17.35      239.24
+5.0    249.59      5.50      277.08
+````
 
-**Traversal with  (Posterior Collapse & Disentanglement):**
-With a strong regularization penalty (), we observe a famous theoretical phenomenon known as **Posterior Collapse (Latent Pruning)**. The model is so heavily penalized for storing information that it completely "turns off" certain latent variables to save KL cost.
-Notice how traversing **Dim 14** and **Dim 18** results in absolutely zero change to the output image; the decoder has learned to completely ignore these "dead" dimensions as they contain no mutual information. However, the dimensions that *do* survive the bottleneck (like **Dim 17**, which smoothly transitions a sleeveless dress into a long-sleeved top) represent highly isolated, disentangled, and meaningful semantic features.
+Two effects are clearly visible. With **β = 0.6**, the model achieves the best reconstruction score (lowest recon loss), but the KL term is relatively large, indicating that the posterior is allowed to carry more information and deviate further from the prior. As **β increases**, the KL term drops substantially (e.g., **β = 5.0** yields KL ≈ 5.50), meaning the latent distribution is forced closer to (\mathcal{N}(0,I)). The cost is a significant degradation in reconstruction quality (recon increases to ≈ 249.59), reflecting a tighter information bottleneck.
 
-> `![Latent Traversal Beta 5.0](assets/traversal_5.0.png)`
+---
+
+###  Qualitative results: latent traversal
+
+To probe interpretability, we perform **latent traversal**. For each trained β-model, we:
+
+1. sample a batch from the loader and compute encoder means ( \mu(x) ),
+2. choose the **top 5 latent dimensions** with the highest variance across the batch (dimensions that “move” the most in practice),
+3. pick a single reference image (we attempt to select a sample from class id **3**, falling back to the first sample if unavailable),
+4. set the base latent code to ( z_0 = \mu(x_{ref}) ) (deterministic traversal),
+5. sweep one latent dimension at a time across **7 values** in ([-3, 3]), while holding all other dimensions fixed.
+
+This produces a 5×7 grid per β setting.
+
+#### β = 0.6 (weak regularization)
+
+With lower β, the model is primarily driven by reconstruction quality. In the traversal grid, changing a single latent coordinate can cause **large and sometimes abrupt semantic shifts**, including class-level morphing (e.g., dress-like silhouettes transitioning toward shoe-like shapes in some rows). This suggests that semantic factors are more **entangled**: one coordinate may influence multiple attributes at once.
+
+![Latent Traversal Beta 0.6](assets/traversal_0.6.png)
+
+#### β = 0.9 (moderate regularization)
+
+This setting tends to produce more stable transitions than β=0.6, while still preserving decent reconstruction quality. In our grid, some dimensions show smoother changes in geometry (width/length/shape), although occasional semantic drift is still visible.
+
+![Latent Traversal Beta 0.9](assets/traversal_0.9.png)
+
+#### β = 5.0 (strong regularization)
+
+With strong KL pressure, the latent codes are constrained to remain closer to the prior. Traversals often become more “conservative”: many dimensions induce smaller, more localized changes, and several rows show **limited visual sensitivity** to the swept coordinate. This behavior is consistent with a tighter bottleneck where the decoder learns to rely less on certain latent dimensions (some dimensions contribute little, while a subset still controls the dominant variation). The trade-off is clearly reflected in the quantitative results: reconstruction quality drops noticeably at this β.
+
+![Latent Traversal Beta 5.0](assets/traversal_5.0.png)
+
+---
+
+### Phase 3 summary
+
+Across β values, we observe the expected β-VAE behavior: **smaller β improves reconstructions but yields a less structured/less stable latent traversal**, while **larger β enforces a stronger information bottleneck**, decreasing KL divergence but also worsening reconstructions and reducing sensitivity along some latent directions. These observations motivate the next step (Phase 4), where we introduce **conditional generation** to control outputs explicitly using class labels.
 
 
 ## Phase 4: Conditional VAE (CVAE) & Directed Generation
