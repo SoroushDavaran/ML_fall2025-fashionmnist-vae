@@ -373,3 +373,91 @@ Finally, we compare unconditional vs conditional sampling for a fixed target cla
 ### Phase 4 summary
 
 By conditioning both inference and generation on class labels—and reinforcing label information at multiple decoder resolutions—the CVAE provides reliable directed synthesis on Fashion-MNIST. The classifier-based evaluation confirms strong controllability with **90.66%** overall accuracy, with most remaining errors concentrated in visually ambiguous categories (especially **Coat** and **Shirt**).
+
+
+## Phase 5 : Final Report and Consolidated Results
+
+Phase 5 consolidates all findings from Phases 1–4 into a single, structured summary. The goal is to present (i) a final test-set comparison table across all model configurations, (ii) a small set of representative qualitative grids from each phase, and (iii) a short conclusion identifying the best configuration(s) depending on the evaluation objective (reconstruction quality, generative fidelity, interpretability, or controllability).
+
+---
+
+###  Final quantitative comparison (test set)
+
+The table below reports the final decomposition of the VAE objective on the **test set** for every model/configuration used in the project. Each entry includes:
+- **Recon Loss**: reconstruction term (pixel-wise BCE with logits)
+- **KL Loss**: regularization term \(D_{KL}(q(z|x)\,\|\,\mathcal{N}(0,I))\)
+- **Total Loss**: `Recon + β·KL` (or `Recon + KL` when β=1)
+
+| # | Model | Recon Loss | KL Loss | Total Loss |
+|---:|------|-----------:|--------:|-----------:|
+| 0 | Baseline MLP-VAE (β=1.0) | 231.3149 | 11.4990 | 242.8139 |
+| 1 | Improved ConvVAE (β=1.0) | 219.0841 | 17.9747 | 237.0588 |
+| 2 | Beta-VAE (β=0.6) | **218.0755** | 23.5012 | **232.1763** |
+| 3 | Beta-VAE (β=0.9) | 223.6230 | 17.3534 | 239.2410 |
+| 4 | Beta-VAE (β=5.0) | 249.5887 | **5.4978** | 277.0776 |
+| 5 | Conditional ConvVAE (CVAE Pro) | 219.3008 | 14.9707 | 234.2714 |
+
+**How to read this table.**  
+- The **best raw reconstruction** (lowest Recon Loss) is achieved by **β=0.6** (Beta-VAE), which is expected because weaker KL pressure allows the model to store more information in the latent code.  
+- The **strongest regularization** effect (lowest KL Loss) appears at **β=5.0**, indicating a much tighter information bottleneck—at the cost of noticeably worse reconstructions.  
+- Relative to the baseline MLP-VAE, the **Improved ConvVAE (β=1.0)** reduces reconstruction loss substantially, confirming that convolutional/residual structure better captures spatial patterns in Fashion-MNIST.
+
+---
+
+###  Key qualitative evidence (required grids)
+
+Below are the phase-wise qualitative artifacts that support the quantitative results above. These should be included as compact grids in the final report:
+
+**Phase 2 — Baseline (MLP-VAE)**
+- Reconstruction grid (≥20): input vs reconstruction  
+- Sampling grid (≥50): unconditional samples  
+![Baseline Reconstructions](assets/baseline_recon.png)  
+![Baseline Samples](assets/baseline_samples.png)
+
+**Phase 2 — Quality improvement**
+- Before/after comparison: reconstructions and samples for the improved convolutional model  
+![Improved ConvVAE Reconstructions](assets/resnet_recon.png)  
+![Improved ConvVAE Samples](assets/resnet_samples.png)
+
+**Phase 3 — Latent traversal (β sweep)**
+- Latent traversal grids (5 dims × 7 values) for each β  
+![Latent Traversal β=0.6](assets/traversal_0.6.png)  
+![Latent Traversal β=0.9](assets/traversal_0.9.png)  
+![Latent Traversal β=5.0](assets/traversal_5.0.png)
+
+**Phase 4 — Conditional generation (all 10 classes)**
+- Conditional generation grid (20 samples per class)  
+- Classifier-based directed accuracy (500 samples per class)  
+![CVAE Conditional Grid](assets/conditional_grid.jpg)
+
+---
+
+###  Short conclusion (best settings + trade-offs)
+
+There is no single “best” configuration for all objectives, so we summarize the results by target goal:
+
+**1) Best reconstruction / lowest total objective**  
+If the priority is minimizing reconstruction error and the overall VAE objective on the test set, **Beta-VAE with β=0.6** performs best in our experiments (Recon ≈ 218.08, Total ≈ 232.18). This aligns with the expected behavior that weaker KL pressure improves reconstruction fidelity.
+
+**2) Best structured latent / strongest bottleneck**  
+For a more constrained latent distribution (closest to the prior), **β=5.0** achieves the lowest KL (≈ 5.50). However, this comes with a major reconstruction penalty (Recon ≈ 249.59). In practice, this setting is useful when interpretability/disentanglement matters more than pixel-level reconstruction quality.
+
+**3) Best general-purpose unconditional generator**  
+The **Improved ConvVAE (β=1.0)** provides a strong balance: substantially improved reconstructions vs. the baseline (231.31 → 219.08) while maintaining a meaningful KL term. This model also served as the strongest unconditional backbone for realistic sample generation in later analyses.
+
+**4) Best controllability (directed generation)**  
+The **Conditional ConvVAE (CVAE Pro)** is the best choice when control is required. It achieves recon/test performance comparable to the improved unconditional model (Recon ≈ 219.30, Total ≈ 234.27) while enabling class-directed sampling. Using the frozen project classifier, the CVAE achieved **90.66% overall directed accuracy**, with most errors concentrated in visually ambiguous categories (e.g., Coat vs Shirt).
+
+---
+
+### Limitations and future work
+
+- **Ambiguous classes:** Fashion-MNIST contains visually overlapping categories (Coat/Shirt/Pullover), which limits both classifier-based evaluation and conditional separability.
+- **Single-metric evaluation:** The objective terms (Recon/KL/Total) measure training consistency, but perceptual fidelity is better captured by feature-based metrics (FID) and human inspection.
+- **Potential improvements:** stronger decoders (attention / deeper residual stacks), richer priors (mixture-of-Gaussians, VampPrior), and improved conditional mechanisms (class embeddings + conditional normalization) could improve both fidelity and controllability.
+
+---
+
+### Phase 5 summary
+
+Phase 5 confirms that our pipeline is complete and internally consistent across all project requirements: baseline VAE construction, quality improvement, β-controlled latent analysis, and full conditional generation. Quantitative test metrics and phase-specific qualitative grids together provide a clear narrative of the trade-offs between reconstruction quality, latent structure, and controllability.
