@@ -195,7 +195,7 @@ FID Improvement: 3.50 points 🔥
 
 
 
-## Phase 3 — β-VAE and Latent Space Interpretability
+## Phase 3 : β-VAE and Latent Space Interpretability
 
 Phase 3 investigates how the VAE latent space changes when we explicitly scale the KL regularization term by a factor **β** (i.e., a β-VAE). Concretely, we optimize the same objective as Phase 2 but replace the regularization weight with β:
 
@@ -276,11 +276,11 @@ Across β values, we observe the expected β-VAE behavior: **smaller β improves
 
 In the final phase, we transformed our generative architecture into a **Conditional Variational Autoencoder (CVAE)**. By conditioning both the encoder and decoder on explicit class labels (), we gained the ability to dictate exactly *which* category of clothing the model should synthesize from random noise.
 
-### 1. Robust Multi-Scale Conditioning
+### Robust Multi-Scale Conditioning
 
 To ensure the model heavily relies on the conditioning label, we injected the one-hot encoded class vector  not just at the latent bottleneck, but across multiple spatial resolutions within the decoder (e.g., concatenated at the , , and  feature map stages). This robust multi-scale conditioning significantly reduces mode collapse and class confusion.
 
-### 2. Directed Generation Results
+### Directed Generation Results
 
 We forced the model to generate 20 novel samples for each of the 10 specific categories using standard random noise  paired with a hard-coded label .
 
@@ -288,7 +288,7 @@ As seen in the generation grid, the model accurately isolates the structural ide
 
 > `![CVAE Conditional Generation Grid](assets/conditional_grid.jpg)`
 
-### 3. Quantitative Evaluation (Classifier Accuracy)
+### Quantitative Evaluation (Classifier Accuracy)
 
 To rigorously evaluate the conditionality, we generated 500 synthetic images *per class* (5,000 total) and evaluated them using the pre-trained `FashionResNet18` classifier. The metric measures how often the synthesized image is confidently recognized as the requested target class.
 
