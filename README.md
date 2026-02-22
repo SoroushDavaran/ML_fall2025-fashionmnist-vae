@@ -283,7 +283,7 @@ Phase 4 upgrades our generative pipeline from an unconditional VAE into a **Cond
 We implement a convolutional CVAE where both the encoder and decoder receive class information. The label $`y`$ is converted to a one-hot vector and injected in a way that makes it difficult for the network to ignore conditioning:
 
 **Encoder-side conditioning.**  
-We expand the one-hot label spatially and concatenate it with the input image, turning the encoder input from `[1, 28, 28]` into `[1 + 10, 28, 28]`. This forces the inference network to learn $`q(z \mid x, y)\), not just \(q(z \mid x)`$.
+We expand the one-hot label spatially and concatenate it with the input image, turning the encoder input from `[1, 28, 28]` into `[1 + 10, 28, 28]`. This forces the inference network to learn $`q(z \mid x, y)`$, not just $`q(z \mid x)`$.
 
 **Decoder-side multi-scale conditioning.**  
 We condition the decoder at multiple stages:
@@ -352,22 +352,21 @@ Per-class accuracy:
 | Dress       |      96.80% | Sandal     |   87.20% |
 | Coat        |      63.80% | Shirt      |   75.40% |
 
-**Overall conditional generation accuracy: 90.66%**
+**Overall conditional generation accuracy: 90.66%** 🔥
 
 Interpretation. The CVAE achieves strong control on structurally distinct classes (e.g., **Trouser**, **Ankle boot**, **Sneaker**). The weakest classes are those with high visual overlap in Fashion-MNIST (notably **Coat** and **Shirt**), where even a strong classifier tends to confuse categories due to similar silhouettes and textures.
 
 ---
 
-### Optional qualitative checks: style morphing and control comparison
+### Brief Comparison: Unconditional VAE vs. Conditional CVAE
 
-Beyond class control, we also visualize *intra-class style continuity* by interpolating between the encoder means of two real images from the same class and decoding the interpolated latent codes under the same label condition.
+In the baseline **Unconditional VAE** (Phase 2), the latent variable \(z\) must implicitly encode *everything* at once: both the **class identity** (e.g., “dress” vs. “shoe”) and the **style factors** (e.g., brightness, thickness, minor geometric variations). As a result, sampling $`z \sim \mathcal{N}(0,I)`$ provides **no direct control** over what category will be generated. The decoder outputs items from arbitrary classes, and occasionally produces ambiguous shapes that appear to mix multiple categories—an expected consequence of entangled class+style information inside $`z`$.
 
-![CVAE Style Morphing (example classes)](./images/cvae_morphing.png)
+In contrast, the **CVAE** explicitly injects the class label \(y\) into both the encoder and decoder. This shifts the responsibility for “what class is it?” from \(z\) to \(y\). The latent code \(z\) can now focus primarily on **intra-class variation and style**, while the label provides **directed generation**: we can request a specific category (e.g., “Ankle boot” or “Trouser”) and still preserve meaningful stylistic diversity driven by random sampling in \(z\).
 
-Finally, we compare unconditional vs conditional sampling for a fixed target class to highlight the difference between “random categories” and directed generation:
+The figure below illustrates this difference. The unconditional VAE produces random categories (top row), while the CVAE produces samples consistently aligned with the chosen target class (bottom row).
 
-![VAE vs CVAE (control comparison)](./images/vae_vs_cvae.png)
-
+![Generative Control Comparison: VAE vs. CVAE](./images/compare_label.png)
 ---
 
 ### Phase 4 summary
