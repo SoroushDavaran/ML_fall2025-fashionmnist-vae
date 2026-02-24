@@ -64,7 +64,7 @@ One batch x: torch.Size([128, 1, 28, 28]) torch.float32 | y: torch.Size([128]) t
 
 Before introducing any model, we visually inspect a randomly sampled batch of 25 images along with their labels. This is a simple but critical integrity check: it confirms that (i) tensors are properly scaled and shaped, (ii) images are not corrupted, and (iii) labels match the content shown in the grid.
 
-![Sanity Check - 25 Samples](./images/sanity_check_image.png)
+![Sanity Check - 25 Samples](./Images/sanity_check_image.png)
 
 ### Exploratory data analysis
 
