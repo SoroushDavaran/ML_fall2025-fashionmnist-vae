@@ -410,8 +410,8 @@ Below are the phase-wise qualitative artifacts that support the quantitative res
 **Phase 2 — Baseline (MLP-VAE)**
 - Reconstruction grid (≥20): input vs reconstruction  
 - Sampling grid (≥50): unconditional samples  
-![Baseline Reconstructions](assets/baseline_recon.png)  
-![Baseline Samples](assets/baseline_samples.png)
+![Baseline Reconstructions](./Images/baseline_recon.png)  
+![Baseline Samples](./Images/baseline_samples.png)
 
 **Phase 2 — Quality improvement**
 - Before/after comparison: reconstructions and samples for the improved convolutional model  
@@ -420,14 +420,14 @@ Below are the phase-wise qualitative artifacts that support the quantitative res
 
 **Phase 3 — Latent traversal (β sweep)**
 - Latent traversal grids (5 dims × 7 values) for each β  
-![Latent Traversal β=0.6](assets/traversal_0.6.png)  
-![Latent Traversal β=0.9](assets/traversal_0.9.png)  
-![Latent Traversal β=5.0](assets/traversal_5.0.png)
+![Latent Traversal β=0.6](./Images/traversal_0.6.png)  
+![Latent Traversal β=0.9](./Images/traversal_0.9.png)  
+![Latent Traversal β=5.0](./Images/traversal_5.0.png)
 
 **Phase 4 — Conditional generation (all 10 classes)**
 - Conditional generation grid (20 samples per class)  
 - Classifier-based directed accuracy (500 samples per class)  
-![CVAE Conditional Grid](assets/conditional_grid.jpg)
+![CVAE Conditional Grid](./Images/conditional_grid.jpg)
 
 ---
 
