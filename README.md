@@ -72,7 +72,7 @@ The goal of the EDA in this phase is not to overanalyze the dataset, but to conf
 
 We first examine class counts in the train split. The resulting bar chart shows that the split remains effectively balanced across all 10 classes, so the model is not expected to face a strong class-frequency bias during training.
 
-![Class Distribution in Train Split](.//class_distribution.png)
+![Class Distribution in Train Split](./Images/class_distribution.png)
 
 Next, we inspect the global pixel intensity distribution (normalized to `[0,1]`). The histogram exhibits a dominant spike near 0, indicating that the dataset contains a large proportion of dark background pixels. The long tail toward higher intensity values corresponds to the brighter foreground regions (the clothing items and their boundaries). This is expected for Fashion-MNIST and is useful context when interpreting reconstruction loss: the background occupies most pixels, while the foreground carries most of the semantic structure.
 
@@ -251,7 +251,7 @@ This produces a 5×7 grid per β setting.
 
 With lower β, the model is primarily driven by reconstruction quality. In the traversal grid, changing a single latent coordinate can cause **large and sometimes abrupt semantic shifts**, including class-level morphing (e.g., dress-like silhouettes transitioning toward shoe-like shapes in some rows). This suggests that semantic factors are more **entangled**: one coordinate may influence multiple attributes at once.
 
-![Latent Traversal Beta 0.6](assets/traversal_0.6.png)
+![Latent Traversal Beta 0.6](./Images/traversal_0.6.png)
 
 #### β = 0.9 (moderate regularization)
 
@@ -415,8 +415,8 @@ Below are the phase-wise qualitative artifacts that support the quantitative res
 
 **Phase 2 — Quality improvement**
 - Before/after comparison: reconstructions and samples for the improved convolutional model  
-![Improved ConvVAE Reconstructions](assets/resnet_recon.png)  
-![Improved ConvVAE Samples](assets/resnet_samples.png)
+![Improved ConvVAE Reconstructions](./Images/resnet_recon.png)  
+![Improved ConvVAE Samples](./Images/resnet_samples.png)
 
 **Phase 3 — Latent traversal (β sweep)**
 - Latent traversal grids (5 dims × 7 values) for each β  
